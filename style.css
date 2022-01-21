@@ -17,3 +17,15 @@ button {
   background-color: blueviolet;
   padding-bottom: 50%;
 }
+
+#gui_container{
+  position: absolute;
+  top: 0%;
+  left: 70%;
+  height: 70%;
+  width: 20%;
+}
+
+#gui {
+  transform:translate(-50%, -75px);
+}

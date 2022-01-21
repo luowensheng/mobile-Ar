@@ -1,28 +1,28 @@
  import * as THREE from "three";
-
-import {initSensors} from "./sensors";
+ import * as dat from 'dat.gui';
+//  import * as THREEx from 'threejsx'
+ //import {ModelAnimationObject} from 'threejsx'
+ import {initSensors} from "./sensors";
 //import {loadModel, predict} from "./model-utils";
-import {getFilesFromFolder, readLocal, getElapsed, initCam, onWindowResize} from "./utils";
-import {getCamera, getControls, load3DModel} from "./world";
+import {initCam, onWindowResize} from "./utils";
+import {getCamera, getControls, createMesh, ThreeEvents, load3DModel} from "./world";
 
-const btn = document.createElement("button");
-btn.textContent = "CLICK!"
-btn.addEventListener("click", (ev)=>{
-  alert("clicked");
-})
 
+const gui = new dat.GUI();
+gui.add({item:"item"}, "Models", {item1:"item1", item2:"item2", })
+gui.windows = [];
 
 const width = innerWidth;
 const height = innerHeight;
 const path = "./img.png";
 
-const paths = ['black_leather_chair.gltf', 'Books_Magazines.gltf', 
+const paths = [  'black_leather_chair.gltf', 'Books_Magazines.gltf', 
                  'Broken Container.gltf', 'Cappuccino_cup.glb', 
                  'Dream AP2.glb', 'free_car_001.gltf', 'HepBurn_Sofa.glb', 
                  'lesson1.glb', 'PEACE_LILLY_5K.gltf', 'SHOE_CABINET.gltf', 
                  'TREE_STUMP_CARVED_5K.gltf', 'WHISKEY_GLTF.gltf', 'WoodHouse.glb'];
 
-const mpath = paths[Math.floor(Math.random()*paths.length)]               
+const mpath = paths[Math.floor(Math.random()*paths.length)];               
 //alert(getFilesFromFolder("./objects"))
 
 window.addEventListener("DOMContentLoaded", ()=>{
@@ -37,8 +37,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
       const video = document.createElement("video");
       video.width = width; 
       video.height = height; 
+    
 
-      let absolute; //, alpha, beta , gamma;
+      let absolute, alpha, beta , gamma;
       //let model = null; // loadModel(modelPath);
 
       const sensor = initSensors();
@@ -76,30 +77,74 @@ window.addEventListener("DOMContentLoaded", ()=>{
         camera = getCamera();
         camera.position.z = 5;
 
+
         renderer = new THREE.WebGLRenderer({alpha: true});
         renderer.setSize(width, height);
         //renderer.setPixelRatio(window.devicePixelRatio); 
-        document.body.appendChild(renderer.domElement); 
-      //  renderer.domElement.appendChild(btn); 
+        document.body.appendChild(renderer.domElement);
+        //const domEvents = new THREEx.DomEvents(camera, renderer.domElement); 
+        // load3DModel("./objects/" + mpath, group);
 
-        document.body.appendChild(btn);
+        const clickEvents = new ThreeEvents(scene, camera, renderer);
 
-        renderer.setSize(width, height);
-    
-        //const box = getBox(path); group.add(box);
-        load3DModel("./objects/" + mpath, group);
-        //
+        clickEvents.RegisterObject("background", ()=>{
+          // alert(`Clicked background`);
+
+          // gui.windows.forEach((folder)=> gui.removeFolder(folder));
+        });
+
+        const postProcess = (object, scale=5)=>{
+            object.position.set(0, 0, -15);
+            const box = new THREE.Box3().setFromObject(object);
+            object.scale.set(1 / (box.max.x / scale), 1 / (box.max.y / scale), 1 / (box.max.z / scale));
+            object.rotation.x = 90 * Math.PI / 180;
+        }
+
+        load3DModel("./objects/"+mpath, (model)=>{
+
+          postProcess(model);
+          model.mname = getName(mpath);
+          group.add(model);
+          model.userData.clickable = true;
+          
+          const box = createMesh({
+            objGeometry: new THREE.BoxGeometry(1, 1, 1),
+            objMaterial: new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path)}),
+          });           
+
+          group.add(box);
+          
+          clickEvents.RegisterObject(model.mname, ()=>{
+            // alert(`Clicked ${model.mname} `);
+            console.log(`${model.mname} ${model}`);
+            haveFun(model);
+            
+            // model.material.color.set( Math.random() * 0xffffff );
+
+             
+          });
+          
+         // haveFun(model);
+
+          document.addEventListener("click", clickEvents.Tick());
+          // document.addEventListener("touchend", clickEvents.Tick());
+          document.addEventListener("touchstart", clickEvents.Tick());
+
+
+          console.log("added click action for ", model);
+          console.log("children: ", group.children);
+
       
+          
+        }, "gltf");
+
         // Add lightSource
-        const light = new THREE.DirectionalLight(0xffffff, 50);
+        const light = new THREE.DirectionalLight(0xffffff, 5);
         light.target = group;//box;
         light.position.set(0, 0, 10);
         scene.add(light);
 
         scene.background = new THREE.Texture(canvas);
-        // scene.background.minFilter = THREE.LinearFilter;
-        // scene.background.magFilter = THREE.LinearFilter;
-
         scene.add(group); 
     
     
@@ -166,12 +211,21 @@ window.addEventListener("DOMContentLoaded", ()=>{
  // createElementWithContent("li", `accx:${event.acceleration.x} _ accy:${event.acceleration.y} _ accz:${event.acceleration.z}` );
   });
   
+  window.addEventListener( 'resize', ()=>{
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+})
+
+
   window.addEventListener("deviceorientation", (event)=>{
     
       absolute = event.absolute;
-      alpha    = event.alpha;
-      beta     = event.beta;
-      gamma    = event.gamma;
+      alpha = event.alpha;
+      beta  = event.beta;
+      gamma = event.gamma;
 
     //  createElementWithContent("li", `absolute:${absolute} alpha:${alpha} beta:${beta} gamma:${gamma} `)
     
@@ -200,6 +254,63 @@ window.addEventListener("DOMContentLoaded", ()=>{
 })
 
 
+function getName(name){
+  return name.split(".")[0].split("_").join(" ");
+}
+
+function haveFun(object){
+
+  const name = object.mname || `object ${object.uuid}` || "object";
+
+  // const guiContainer = document.createElement("div");
+  // guiContainer.id = name;
+  // guiContainer.appendChild(gui.domElement);
+  // document.body.appendChild(guiContainer);
+
+  
+  var objectInfo = gui.addFolder(name);
+
+  var position = objectInfo.addFolder("position");
+  var rotation = objectInfo.addFolder("rotation");
+  var scale = objectInfo.addFolder("scale");
+
+  position.add(object.position, 'x', -10, 10);
+  position.add(object.position, 'y', -10, 10);
+  position.add(object.position, 'z', -10, 10);
+
+  rotation.add(object.rotation, 'x', -90, 90);
+  rotation.add(object.rotation, 'y', -90, 90);
+  rotation.add(object.rotation, 'z', -90, 90);
+
+  scale.add(object.scale, 'x', 0, 10);
+  scale.add(object.scale, 'y', 0, 10);
+  scale.add(object.scale, 'z', 0, 10);
+  
+  objectInfo.open();
+  position.open();
+  rotation.open();
+  scale.open();
+  gui.windows.push(objectInfo);
+  
+
+}
+
+
+  //   function buttonFunction() {
+  //         //do button 
+  //         //stuff here.
+  //         folder.remove(xf);
+  //         folder.remove(yf);
+  //         folder.remove(zf);
+  //     }
+      
+  //     var params = {
+  //         ClickMe: buttonFunction
+  //     };
+  // var folder2 = gui.addFolder('Folder');
+  // folder2.add(params, "ClickMe");
+  // folder2.open();
+
 
 
 function getPosition(acc, t){
@@ -217,8 +328,6 @@ function createAndAdd2DOM(tag, id=null){
   console.log(element);
   return element;
 }
-
-
 
 
 function drawRect(ctx, x, y, w, h, color="blue"){
