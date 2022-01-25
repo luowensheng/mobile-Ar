@@ -120,7 +120,7 @@ export function getBox(path=null){
     });
 
   // plane = createMesh({objGeometry: new THREE.PlaneGeometry(1, 1),
-  //               objMaterial: new THREE.MeshBasicMaterial({map: new THREE.VideoTexture(video)}) });
+  //   `            objMaterial: new THREE.MeshBasicMaterial({map: new THREE.VideoTexture(video)}) });
 
   box.rotation.x = 90 * Math.PI / 180 ;
 return box;

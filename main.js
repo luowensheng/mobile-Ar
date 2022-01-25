@@ -100,7 +100,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
             object.rotation.x = 90 * Math.PI / 180;
         }
 
-        load3DModel("./objects/"+mpath, (model)=>{
+        load3DModel("./public/objects/"+mpath, (model)=>{
 
           postProcess(model);
           model.mname = getName(mpath);
