@@ -100,43 +100,43 @@ window.addEventListener("DOMContentLoaded", ()=>{
             object.rotation.x = 90 * Math.PI / 180;
         }
 
-        load3DModel("./public/objects/"+mpath, (model)=>{
+        // load3DModel("./public/objects/"+mpath, (model)=>{
 
-          postProcess(model);
-          model.mname = getName(mpath);
-          group.add(model);
-          model.userData.clickable = true;
+        //   postProcess(model);
+        //   model.mname = getName(mpath);
+        //   group.add(model);
+        //   model.userData.clickable = true;
           
-          const box = createMesh({
-            objGeometry: new THREE.BoxGeometry(1, 1, 1),
-            objMaterial: new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path)}),
-          });           
+        //   const box = createMesh({
+        //     objGeometry: new THREE.BoxGeometry(1, 1, 1),
+        //     objMaterial: new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(path)}),
+        //   });           
 
-          group.add(box);
+        //   group.add(box);
           
-          clickEvents.RegisterObject(model.mname, ()=>{
-            // alert(`Clicked ${model.mname} `);
-            console.log(`${model.mname} ${model}`);
-            haveFun(model);
+        //   clickEvents.RegisterObject(model.mname, ()=>{
+        //     // alert(`Clicked ${model.mname} `);
+        //     console.log(`${model.mname} ${model}`);
+        //     haveFun(model);
             
-            // model.material.color.set( Math.random() * 0xffffff );
+        //     // model.material.color.set( Math.random() * 0xffffff );
 
              
-          });
+        //   });
           
-         // haveFun(model);
+        //  // haveFun(model);
 
-          document.addEventListener("click", clickEvents.Tick());
-          // document.addEventListener("touchend", clickEvents.Tick());
-          document.addEventListener("touchstart", clickEvents.Tick());
+        //   document.addEventListener("click", clickEvents.Tick());
+        //   // document.addEventListener("touchend", clickEvents.Tick());
+        //   document.addEventListener("touchstart", clickEvents.Tick());
 
 
-          console.log("added click action for ", model);
-          console.log("children: ", group.children);
+        //   console.log("added click action for ", model);
+        //   console.log("children: ", group.children);
 
       
           
-        }, "gltf");
+        // }, "gltf");
 
         // Add lightSource
         const light = new THREE.DirectionalLight(0xffffff, 5);
